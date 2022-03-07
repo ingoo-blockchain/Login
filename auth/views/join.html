@@ -46,7 +46,7 @@
                     }
                 }
             }
-
+            
             // fetch 내장객체 javascript 대부분 지원해여 
             function clickHandler2(){
                 const data = JSON.stringify({userid:userid.value})
@@ -60,35 +60,103 @@
                     body:data
                 }
 
-                fetch('http://localhost:3000/idcheck',option)
-                .then( (response)=>{
-                    return response.json()
+                fetch('http://localhost:3000/idcheck',option) // promise 객체로 반환 
+                .then( (response)=>{ // HTTP header정보 
+                    return response.json() // body영역 promise 
                 } )
-                .then( (result) => {
+                .then( (result) => { // result HTTP body 
                     console.log( result )
                 } )
             }
 
             // axios 외부라이브러리 
             function clickHandler3(){
-                const data = JSON.stringify({userid:userid.value})
-                // app.get('url',()=>{})
+                const data = {userid:userid.value}
+                // 편의성 stirng 
+                // 로딩만들기 
                 axios.post('http://localhost:3000/idcheck',data,{"Content-type":"application/json"})
                 .then( (response) => {
-                    console.log(response)
+                    console.log(response.data)
+                    // 로딩지우기
                 })
             }
+
+            async function clickHandler4(){
+                const data = {userid:userid.value}
+                // 요청을보내기전?
+                // 로딩만들어~
+                try{
+                    const response = await axios.post('http://localhost:3000/idcheck',data,{"Content-type":"application/json"})
+                } catch (e) {
+                    console.log(e)
+                }
+                // 요청이 완료된후 ?
+                // 로딩끝~
+                console.log(response.data)
+            }
+
+            const joinfrm = document.querySelector('#joinfrm')
+            const id = document.querySelector('#userid')
+            const pw = document.querySelector('#userpw')
+            const name = document.querySelector('#username')
+            
+
+            joinfrm.addEventListener('submit', async (e)=>{
+                e.preventDefault()
+
+                const data = {
+                    userid:id.value,
+                    userpw:pw.value,
+                    username:name.value
+                }
+
+                const response = await axios.post('/join2',data,{"Content-type":"application/json"})
+                console.log(response.data)
+
+                // DOM 조작을 하나하나 다 해주는겁니다. 
+                const wrap = document.querySelector('#wrap')
+                const {userid,userpw,username} = response.data
+
+                // const spanElement = document.createElement('span')
+                // spanElement.innerHTML = `${userid}님 환영합니다. 
+                // 패스워드는 : ${userpw} 입니다.
+                // 이름은 ${username} 입니다.
+                // `
+
+                // template 내용을 가져와서 사용하는 방식 
+                const template = document.querySelector('#welcome')
+
+                wrap.innerHTML = template.innerHTML.replace('{userid}',userid)
+                                                    .replace('{userpw}',userpw)
+                                                    .replace('{username}',username)
+
+                // wrap.innerHTML = ''
+                // wrap.append(spanElement)
+            })
         }
 
     </script>
 </head>
 <body>
-    <form action="/join" method="post">
-        <input type="text" id="userid" name="userid">
+    <div id="wrap">
+    <form action="/join2" method="post" id="joinfrm">
+        <!-- 중복체크 -->
+        <input type="text" id="userid" name="userid" placeholder="아이디입력">
         <input type="button" id="idcheck_btn" value="중복체크">
         <div id="msg">
             
         </div>
+        <input type="text" id="userpw" name="userpw" placeholder="패스워드입력">
+        <input type="text" id="username" name="username" placeholder="이름입력">
+
+        <input type="submit" value="회원가입">
     </form>
+    </div>
+    <template id="welcome">
+        <span style="color:red;">회원가입을 축하드립니다 .</span>
+        아이디는 : {userid}
+        패스워드는 : {userpw}
+        이름는 : {username}
+    </template>
 </body>
 </html>

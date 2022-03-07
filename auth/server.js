@@ -4,6 +4,7 @@ const { user } = require('./models/user')
 const { createToken } = require('./utils/jwt')
 const { auth } = require('./middlewares/auth')
 const { join } = require('nunjucks/src/filters')
+const req = require('express/lib/request')
 const app = express()
 
 app.set('view engine','html')
@@ -19,11 +20,12 @@ nunjucks.configure('views',{
 // req.body.userpw = asdfgfg
 app.use(express.urlencoded({extended:true,})) // http body영역을 해석해주는아이 Content-type : application/x-www-form-urlencoded
 app.use(express.json()) // Content-type : application/json
+app.use(express.static('public'))
 
 // app.use(auth)
 
 app.get('/',(req,res)=>{
-    res.send('hello server111')
+    res.render('index')
 })
 
 app.get('/user',(req,res)=>{
@@ -107,6 +109,55 @@ app.post('/idcheck',(req,res)=>{
     res.send( JSON.stringify(response) )
 })
 // 화면 1개 
+
+// POST 회원가입
+app.post('/join',(req,res)=>{
+    const {userid,userpw,username} = req.body
+
+    // user = [
+    //     ...user,
+    //     {...req.body}
+    // ]
+
+    //  user.push({...req.body})
+
+    // const data = {
+    //     userid,
+    //     userpw,
+    //     username
+    // }
+    // user.push(data)
+
+    const [check] = user.filter(v=> v.userid === userid)
+    try {
+        if (check !== undefined) new Error('아이디중복')
+        user.push({...req.body})
+        res.redirect(`/welcome?userid=${userid}`)
+    } catch (e) {
+        // 아이디 중복 처리
+    }
+})
+
+app.post('/join2',(req,res)=>{
+    const {userid,userpw,username} = req.body
+    const [check] = user.filter(v=> v.userid === userid)
+    try {
+        if (check !== undefined) new Error('아이디중복')
+        user.push({...req.body})
+        res.send(JSON.stringify(user[user.length-1]))
+    } catch (e) {
+        // 아이디 중복 처리
+    }
+})
+
+app.get('/welcome',(req,res)=>{
+    const {userid} = req.query
+    const [item] = user.filter(v=>v.userid === userid)
+    //
+    res.render('welcome',{
+        item
+    })
+})
 
 app.listen(3000,()=>{
     console.log('서버 시작')
